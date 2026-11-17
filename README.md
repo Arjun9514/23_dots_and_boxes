@@ -1,78 +1,44 @@
-# Scenario 23 - Dots and Boxes
+# Dots and Boxes
 
-## Overview
+A terminal-based Python Dots and Boxes game with Human vs Human and Human vs Computer modes. Uses only the Python standard library.
 
-Dots and Boxes is a turn-based grid game. Players draw one line at a time between adjacent dots. Completing the fourth side of a box claims that box, earns a point, and gives the same player another turn.
+## Run
 
-The starter project is deliberately split into separate modules for game flow, board state, and rule validation. Read the existing implementation carefully before changing it.
-
-## How to run
-
-From this folder:
-
-```text
+```bash
 python main.py
 ```
 
-Enter moves in the form:
+Select `1` for Human vs Human or `2` for Human vs Computer. The human is Player 1 and the computer is Player 2. Enter edges using `H row col` or `V row col`, with zero-based coordinates, for example `H 0 1`. Input is case-insensitive. The default board has 2 rows and 2 columns of boxes.
 
-```text
-H row column
+## Run automated tests
+
+From the project directory:
+
+```bash
+python -m unittest discover -v
 ```
 
-or
+The suite uses `unittest` from the standard library. `test_regression.py` covers legal horizontal and vertical edges, invalid and repeated moves, single- and double-box completion, points, extra turns, game-over behavior, state immutability after rejected moves, and computer move legality and priority. `test_game.py` additionally checks all 5,040 edge orders on a 1×2 board, and `test_validation.py` covers parsing and EOF handling.
+
+## Design decisions
+
+- **Modular responsibilities:** `board.py` owns the edge grids and completed-box set; `rules.py` owns command parsing, move validation, and score deltas; `game.py` owns players, scores, turns, and the gameplay loop; `computer.py` chooses computer moves; `main.py` contains the mode menu.
+- **One move path:** Human and computer moves both go through `DotsAndBoxes.play_move()`, so the same validation, scoring, and extra-turn rules apply.
+- **Atomic invalid moves:** Validate before changing any edge, completed-box record, score, or current player. Both the game method and direct board mutation reject invalid moves with `ValueError`.
+- **Score only new boxes:** The board stores completed boxes in a set. The game compares completed boxes before and after a move; a move closing two boxes scores two points. A scoring player keeps the turn; otherwise the turn alternates.
+- **Computer policy:** Enumerate valid unoccupied edges and choose among moves with the highest immediate box-completion count; break ties randomly. This is a simple greedy opponent, not an optimal solver. Move evaluation does not mutate the board.
+- **Completion:** A game ends once every edge is occupied. Subsequent attempts to play are rejected without changing state. EOF exits the terminal session gracefully.
+- **Testing:** Tests use small boards and deterministic random generators where helpful. They assert both outcomes and state invariants, rather than relying only on printed messages.
+
+## File layout
 
 ```text
-V row column
+board.py             Board storage, completion tracking, rendering
+rules.py             Parsing, validation, scoring delta
+computer.py          Greedy computer opponent
+game.py              Shared turn and score management
+main.py              Mode selection and entry point
+test_game.py         Existing scoring/AI sequence tests
+test_validation.py   Existing input validation tests
+test_regression.py   Additional behavior and state-invariant tests
 ```
-
-Rows and columns start at zero.
-
-## Task 1 — Reproduce and investigate the bug
-
-Run several games and deliberately create situations where a move completes one or more boxes.
-
-Compare the score and turn behaviour before and after box completion. Identify the incorrect behaviour, trace it through the board and game-state logic, and fix it without replacing the modular structure.
-
-Your before-change video should capture the broken behaviour clearly.
-
-## Task 2 — Add a meaningful feature
-
-Add a substantial gameplay feature that requires changes across more than one module.
-
-The feature should make the game more complete rather than simply changing text or appearance. It should interact correctly with the existing board state and turn/score system.
-
-## Task 3 — Validation and robustness
-
-Strengthen input and game-state handling.
-
-The program should safely handle malformed commands, invalid coordinates, repeated lines, and moves made after the board is already complete. Invalid input must not corrupt the board or score.
-
-## Task 4 — Testing and quality
-
-Create or expand automated tests covering the important game rules.
-
-Include tests for at least:
-- a valid horizontal move
-- a valid vertical move
-- an invalid/repeated move
-- completion of a box
-- the end-of-game condition
-
-Document the changes you made and any design decisions that were important to the solution.
-
-## Constraints
-
-- Keep the project modular.
-- Do not replace the game with an unrelated implementation.
-- Preserve the existing gameplay.
-- Avoid putting all new logic into `main.py`.
-- Keep third-party dependencies out unless there is a clear need for them.
-
-## Submission Checklist
-
-Submission is only the following three things:
-
-- [ ] A 10-second video of gameplay **before** your changes, showing the bug/broken behavior
-- [ ] A 10-second video of gameplay **after** your changes, showing the bug fixed and the new features working
-- [ ] The Chat/LLM used page link, with the complete chat history
