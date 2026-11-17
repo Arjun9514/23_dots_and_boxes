@@ -7,34 +7,17 @@ class Board:
         self.completed = set()
 
     def add_line(self, orientation, row, col):
-        if orientation == "H":
-            if not (0 <= row <= self.rows and 0 <= col < self.cols):
-                raise ValueError("Invalid horizontal edge")
-            if self.horizontal[row][col]:
-                raise ValueError("Edge already used")
+        if orientation == 'H':
             self.horizontal[row][col] = True
-
-        elif orientation == "V":
-            if not (0 <= row < self.rows and 0 <= col <= self.cols):
-                raise ValueError("Invalid vertical edge")
-            if self.vertical[row][col]:
-                raise ValueError("Edge already used")
-            self.vertical[row][col] = True
-
         else:
-            raise ValueError("Invalid orientation")
-
+            self.vertical[row][col] = True
         self._update_completed()
 
     def _update_completed(self):
         for r in range(self.rows):
             for c in range(self.cols):
-                if (
-                    self.horizontal[r][c]
-                    and self.horizontal[r + 1][c]
-                    and self.vertical[r][c]
-                    and self.vertical[r][c + 1]
-                ):
+                if (self.horizontal[r][c] and self.horizontal[r + 1][c]
+                        and self.vertical[r][c] and self.vertical[r][c + 1]):
                     self.completed.add((r, c))
 
     def is_complete(self):
@@ -44,16 +27,15 @@ class Board:
 
     def display(self, scores, current):
         print()
-        print(f"Scores: P1={scores[0]}  P2={scores[1]} | Turn: P{current + 1}")
-
+        print(f'Scores: P1={scores[0]}  P2={scores[1]} | Turn: P{current + 1}')
         for r in range(self.rows + 1):
-            print(".".join("---" if self.horizontal[r][c] else "   " for c in range(self.cols)))
+            print('.'.join('---' if self.horizontal[r][c] else '   ' for c in range(self.cols)))
             if r < self.rows:
                 middle = []
                 for c in range(self.cols + 1):
-                    wall = "|" if self.vertical[r][c] else " "
+                    wall = '|' if self.vertical[r][c] else ' '
                     middle.append(wall)
                     if c < self.cols:
-                        middle.append(" " + ("X" if (r, c) in self.completed else " ") + " ")
-                print("".join(middle))
+                        middle.append(' ' + ('X' if (r, c) in self.completed else ' ') + ' ')
+                print(''.join(middle))
         print()
