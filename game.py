@@ -1,5 +1,5 @@
 from board import Board
-from rules import valid_move, completed_boxes
+from rules import move_error, parse_move, completed_boxes
 from computer import choose_move
 
 
@@ -15,8 +15,11 @@ class DotsAndBoxes:
 
         Invalid moves leave the game state and turn unchanged.
         """
-        if not valid_move(self.board, orientation, row, col):
-            raise ValueError('Invalid or already-used move.')
+        if self.board.is_complete():
+            raise ValueError('Game is already complete. No further moves allowed.')
+        error = move_error(self.board, orientation, row, col)
+        if error:
+            raise ValueError(error)
         before = set(self.board.completed)
         self.board.add_line(orientation, row, col)
         gained = completed_boxes(self.board, before)
@@ -27,18 +30,17 @@ class DotsAndBoxes:
         return gained
 
     def human_move(self):
-        raw = input(f'Player {self.current + 1}, move: ').strip().upper()
-        parts = raw.split()
-        if len(parts) != 3:
-            print('Invalid format.')
-            return None
-        orientation, row, col = parts
-        if not row.isdigit() or not col.isdigit():
-            print('Row and column must be numbers.')
-            return None
-        move = (orientation, int(row), int(col))
-        if not valid_move(self.board, *move):
-            print('Invalid or already-used move.')
+        """Return a validated move, None for invalid input, or raise EOFError."""
+        raw = input(f'Player {self.current + 1}, move: ')
+        try:
+            move = parse_move(raw)
+            if self.board.is_complete():
+                raise ValueError('Game is already complete. No further moves allowed.')
+            error = move_error(self.board, *move)
+            if error:
+                raise ValueError(error)
+        except ValueError as exc:
+            print(exc)
             return None
         return move
 
@@ -57,7 +59,11 @@ class DotsAndBoxes:
                     break
                 print(f'Computer plays: {move[0]} {move[1]} {move[2]}')
             else:
-                move = self.human_move()
+                try:
+                    move = self.human_move()
+                except EOFError:
+                    print('\nInput ended. Exiting game without changing the current turn.')
+                    return
                 if move is None:
                     continue
 

@@ -7,6 +7,14 @@ class Board:
         self.completed = set()
 
     def add_line(self, orientation, row, col):
+        """Add one legal edge, rejecting invalid or repeated edges atomically."""
+        from rules import move_error
+
+        error = move_error(self, orientation, row, col)
+        if error:
+            raise ValueError(error)
+        if self.is_complete():
+            raise ValueError('Game is already complete. No further moves allowed.')
         if orientation == 'H':
             self.horizontal[row][col] = True
         else:
